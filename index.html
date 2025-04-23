@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>إحصاءات الأقسام – تجمع الأحساء الصحي</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+:root{--main-blue:#0284c7}
+*{box-sizing:border-box;font-family:'Cairo',sans-serif;margin:0;padding:0}
+body{background:#f7fafe;display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:2rem;gap:2rem}
+.logo{max-width:180px;width:35%;filter:drop-shadow(0 2px 8px #0001)}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1.5rem;max-width:1100px;width:100%}
+.tile{background:var(--main-blue);color:#fff;border-radius:1.25rem;padding:1.25rem;display:flex;flex-direction:column;gap:.35rem;box-shadow:0 4px 10px #0002;position:relative}
+.tile-header{display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem}
+.tile-header i{font-size:1.2rem} /* تصغير حجم الأيقونة */
+.tile-header h3{font-size:1.1rem;font-weight:700;margin:0}
+.stat{font-size:.9rem;display:flex;justify-content:space-between}
+.label{opacity:.85}.value{font-weight:600}
+
+.form-container{margin-bottom:2rem;display:flex;flex-direction:column;gap:1rem;width:100%;max-width:500px}
+.form-container input{padding:.5rem;border-radius:.5rem;border:1px solid #ccc;width:100%}
+.form-container button{background:var(--main-blue);color:white;padding:.6rem;border:none;border-radius:.5rem;cursor:pointer;box-shadow:0 4px 10px #0002;transition:.25s}
+.form-container button:hover{transform:translateY(-3px)}
+
+.show-data-btn{font-size:1.2rem;cursor:pointer;background:var(--main-blue);color:white;padding:.6rem;border:none;border-radius:.5rem;box-shadow:0 4px 10px #0002;transition:.25s}
+.show-data-btn:hover{transform:translateY(-3px);}
+
+.data-display{display:none;flex-direction:column;gap:.8rem;margin-top:2rem;padding:1rem;background:#ffffff;border-radius:.5rem;box-shadow:0 4px 10px #0002;width:100%;max-width:700px}
+.data-display ul{list-style-type:none;margin:0;padding:0}
+.data-display li{margin-bottom:1rem}
+
+/* زر تعديل وحذف */
+.tile .tools {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: flex;
+  gap: 8px; /* تقليل المسافة بين الأيقونات */
+}
+
+.tools i {
+  cursor: pointer;
+  padding: 6px; /* تقليل حجم البادينغ */
+  border-radius: 50%;
+  background: #ffffff60;
+  font-size: 1rem; /* تصغير حجم الأيقونة */
+  transition: background .3s, transform .3s;
+}
+
+.tools i:hover {
+  background: #ffffff90;
+  transform: scale(1.1);
+}
+
+.tools i.edit {
+  color: #28a745; /* أخضر */
+}
+
+.tools i.delete {
+  color: #dc3545; /* أحمر */
+}
+
+.tools i.edit:hover {
+  background: #28a745;
+  color: white;
+}
+
+.tools i.delete:hover {
+  background: #dc3545;
+  color: white;
+}
+</style>
+</head>
+
+<body>
+<img src="12.jpg" alt="Alahsa Health Cluster Logo" class="logo">
+
+<!-- نموذج لإضافة بيانات -->
+<div class="form-container">
+  <input type="text" id="sectionName" placeholder="اسم القسم" />
+  <input type="number" id="usedDevices" placeholder="أجهزة مستخدمة" />
+  <input type="number" id="unusedDevices" placeholder="أجهزة غير مستخدمة" />
+  <input type="text" id="brands" placeholder="ماركات رئيسية" />
+  <input type="number" id="windows10" placeholder="Windows 10" />
+  <input type="number" id="windows11" placeholder="Windows 11" />
+  <input type="number" id="protection" placeholder="الحماية" />
+  <button id="addDataBtn">إضافة البيانات</button>
+</div>
+
+<button class="show-data-btn" id="toggleDataBtn">
+  <i class="fa-solid fa-eye"></i> عرض البيانات
+</button>
+
+<section id="grid" class="grid">
+  <!-- بطاقات البيانات الثابتة ستضاف هنا -->
+</section>
+
+<div class="data-display" id="dataDisplay">
+  <h3>البيانات المخزنة</h3>
+  <ul id="dataList"></ul>
+</div>
+
+<script>
+// استرجاع البيانات المحفوظة من localStorage عند تحميل الصفحة
+function loadData() {
+  const data = JSON.parse(localStorage.getItem('sectionData')) || [];
+  const grid = document.getElementById('grid');
+
+  grid.innerHTML = ''; // إعادة تعيين المحتوى القديم للبطاقات
+
+  data.forEach((item, index) => {
+    const newCard = document.createElement('div');
+    newCard.classList.add('tile');
+
+    newCard.innerHTML = `
+      <div class="tile-header">
+        <i class="fa-solid fa-network-wired icon"></i>
+        <h3 class="title">${item.sectionName}</h3>
+        <div class="tools">
+          <i class="fa-solid fa-edit edit" data-index="${index}"></i>
+          <i class="fa-solid fa-trash delete" data-index="${index}"></i>
+        </div>
+      </div>
+      <div class="stat"><span class="label">أجهزة مستخدمة</span><span class="value">${item.usedDevices}</span></div>
+      <div class="stat"><span class="label">أجهزة غير مستخدمة</span><span class="value">${item.unusedDevices}</span></div>
+      <div class="stat"><span class="label">ماركات رئيسية</span><span class="value">${item.brands}</span></div>
+      <div class="stat"><span class="label">Windows 10 / 11</span><span class="value">${item.windows10} / ${item.windows11}</span></div>
+      <div class="stat"><span class="label">الحماية</span><span class="value">${item.protection}</span></div>
+    `;
+
+    grid.appendChild(newCard);
+  });
+}
+
+// إضافة بيانات جديدة إلى localStorage
+document.getElementById('addDataBtn').addEventListener('click', () => {
+  const sectionName = document.getElementById('sectionName').value;
+  const usedDevices = document.getElementById('usedDevices').value;
+  const unusedDevices = document.getElementById('unusedDevices').value;
+  const brands = document.getElementById('brands').value;
+  const windows10 = document.getElementById('windows10').value;
+  const windows11 = document.getElementById('windows11').value;
+  const protection = document.getElementById('protection').value;
+
+  if (!sectionName || !usedDevices || !unusedDevices || !brands || !windows10 || !windows11 || !protection) {
+    alert('يرجى تعبئة جميع الحقول');
+    return;
+  }
+
+  const newData = {
+    sectionName,
+    usedDevices,
+    unusedDevices,
+    brands,
+    windows10,
+    windows11,
+    protection
+  };
+
+  // استرجاع البيانات من localStorage، إضافة البيانات الجديدة ثم حفظها مرة أخرى
+  const data = JSON.parse(localStorage.getItem('sectionData')) || [];
+  data.push(newData);
+  localStorage.setItem('sectionData', JSON.stringify(data));
+
+  // إعادة تحميل البيانات بعد إضافة البيانات الجديدة
+  loadData();
+
+  // إعادة تعيين النموذج
+  document.querySelector('.form-container').reset();
+});
+
+// تحميل البيانات عند فتح الصفحة
+window.onload = loadData;
+
+// إظهار/إخفاء البيانات المخزنة عند الضغط على الأيقونة
+document.getElementById('toggleDataBtn').addEventListener('click', () => {
+  const dataDisplay = document.getElementById('dataDisplay');
+  const dataList = document.getElementById('dataList');
+
+  // استرجاع البيانات المخزنة
+  const data = JSON.parse(localStorage.getItem('sectionData')) || [];
+  
+  // إذا كانت البيانات غير فارغة
+  if (data.length > 0) {
+    dataList.innerHTML = ''; // إعادة تعيين القائمة
+    data.forEach(item => {
+      const listItem = document.createElement('li');
+      listItem.innerHTML = `
+        <strong>${item.sectionName}</strong>: 
+        أجهزة مستخدمة - ${item.usedDevices}, 
+        أجهزة غير مستخدمة - ${item.unusedDevices}, 
+        ماركات - ${item.brands}, 
+        Windows 10 / 11: ${item.windows10} / ${item.windows11}, 
+        حماية: ${item.protection}
+      `;
+      dataList.appendChild(listItem);
+    });
+
+    // التبديل بين إظهار وإخفاء البيانات
+    dataDisplay.style.display = dataDisplay.style.display === 'none' ? 'flex' : 'none';
+  } else {
+    alert('لا توجد بيانات لعرضها');
+  }
+});
+
+// تعديل بيانات البطاقة
+document.addEventListener('click', (e) => {
+  if (e.target.classList.contains('edit')) {
+    const index = e.target.getAttribute('data-index');
+    const data = JSON.parse(localStorage.getItem('sectionData')) || [];
+    const item = data[index];
+
+    // تحديث الحقول في النموذج
+    document.getElementById('sectionName').value = item.sectionName;
+    document.getElementById('usedDevices').value = item.usedDevices;
+    document.getElementById('unusedDevices').value = item.unusedDevices;
+    document.getElementById('brands').value = item.brands;
+    document.getElementById('windows10').value = item.windows10;
+    document.getElementById('windows11').value = item.windows11;
+    document.getElementById('protection').value = item.protection;
+
+    // حذف البيانات القديمة من الـ localStorage
+    data.splice(index, 1);
+    localStorage.setItem('sectionData', JSON.stringify(data));
+
+    // إعادة تحميل البيانات بعد التعديل
+    loadData();
+  }
+});
+
+// حذف بيانات البطاقة
+document.addEventListener('click', (e) => {
+  if (e.target.classList.contains('delete')) {
+    const index = e.target.getAttribute('data-index');
+    const data = JSON.parse(localStorage.getItem('sectionData')) || [];
+
+    // حذف العنصر من البيانات
+    if (confirm('هل أنت متأكد من حذف هذه البيانات؟')) {
+      data.splice(index, 1);
+      localStorage.setItem('sectionData', JSON.stringify(data));
+
+      // إعادة تحميل البيانات بعد الحذف
+      loadData();
+    }
+  }
+});
+</script>
+
+</body>
+</html>
